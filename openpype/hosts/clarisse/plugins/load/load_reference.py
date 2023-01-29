@@ -11,7 +11,7 @@ class ReferenceLoader(load.LoaderPlugin):
     """Reference content into Clarisse"""
 
     label = "Reference File"
-    families = ["model", "animation", "pointcache", "gpuCache", "geometry"]
+    families = ["model", "animation", "pointcache", "gpuCache", "geometry", "usd"]
     representations = ["abc", "usd", "usda", "usdc"]
     order = 0
 
