@@ -386,15 +386,17 @@ def get_data_node_content():
     return node.attrs.content[0]
 
 
-def get_export_containers(creatortype=None):
+def get_export_containers(creatortype=None, class_type="UsdExportUI"):
     """Get all items which coresponds to exporting a context into an alembic
     trough an AbcExportOPtionsUi item object class
     """
     if creatortype:
         all_files = []
-        class_names = ix.api.CoreStringArray(2)
-        class_names[0] = "AbcExportOptionsUi"
-        class_names[1] = "ProjectItem"
+        class_names = ix.api.CoreStringArray(1)
+        class_names[0] = class_type
+        # class_names[0] = "AbcExportOptionsUi"
+        # class_names[1] = "ProjectItem"
+        # class_names[2] = "UsdExportUI"
         empty_mask = ix.api.CoreBitFieldHelper()
         all_objects = ix.api.OfObjectArray()
         root_context = ix.application.get_factory().get_root()
