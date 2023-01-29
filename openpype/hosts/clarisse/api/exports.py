@@ -1,6 +1,8 @@
 import os
 import ix
 
+from openpype.hosts.clarisse.api.lib import get_export_context, create_context, create_item, set_attrs, get_all_attrs, \
+    get_attr, maintained_selection
 from openpype.hosts.clarisse.api.pipeline import is_valid_item, tag_creator_object
 from openpype.pipeline.context_tools import get_current_project_asset
 
@@ -62,7 +64,75 @@ def export_context_alembic(creator_type="camera", selection=None, config_context
         return options
 
 
+def export_usd_options_uiobject(selected_context, name, options, creator_type='geometry'):
+    """Create the USD UI item for exporting"""
 
+    export_context = get_export_context()
+    geo_sub_context = create_context(str(export_context) + '/'+creator_type)
+    node = create_item(context=geo_sub_context, item_type="UsdExportUI", name=name)
+
+    set_attrs(node, options)
+
+    selected_context = ix.item_exists(str(selected_context))
+    if not selected_context:
+        ix.log_info("Please validate the export context.")
+
+    # tag the object
+    tag_creator_object(item=node, creator_type=creator_type, selected_context=selected_context)
+
+    return node
+
+def execute_usd_export(ui_item):
+    """
+    To export context to usd
+    :param ui_item: (pyContext / str) of context to export
+    :return: None
+    """
+
+    attrs = {
+        "export_context": True,
+        "filename": '',
+        "default_prim": 1,
+        "root_prim": '',  # instance.data['root_prim'],
+        # "root_prim_name": "",
+        "standalone": 0,  # flatten_usd
+        "use_instances": 0,
+        "export_invisible_objects": 0,
+        "export_displacement": 0,
+        "export_custom_attributes": 1,
+        "custom_attributes_namespace": "",
+        "animation_mode": 1,  # current frame
+        # "custom_frame": 0,
+        # "custom_frame_range": [instance.data['start_frame'], instance.data['end_frame']],
+
+    }
+
+    export_attrs = get_all_attrs(ui_item)
+
+    if isinstance(ui_item, str):
+        ui_item = ix.get_item(ui_item)
+
+
+
+    for attr_name in attrs:
+        ui_item.attrs.__setattr__(attr_name, export_attrs[attr_name])
+
+    ui_item.set_private(True)
+    ui_item.set_static(True)
+
+    export_context = get_attr(ui_item, 'sourced_path', attr_prefix='op_')
+
+    assert export_context
+
+    with maintained_selection():
+        ix.application.get_selection().set_selection('global', 'Global', ix.get_item(export_context))
+
+    # if ix.application.inspect(
+    #         ui_item,
+    #         ix.api.AppDialog.cancel(),
+    #         ix.api.AppDialog.STYLE_OK_CANCEL, "USD Export"
+    #         ).is_ok():
+    ui_item.call_action("export_context")
 
 def export_setup_options_uiobject(creator_type=None, selected_context=None, config_context_export=None):
     """Create the UI options_object which feeds option object for exporting
