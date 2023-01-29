@@ -31,12 +31,84 @@ def get_imports_context():
 
 def get_export_context():
     """Get import context or create one so we can load files"""
-    _get_root_imports = ix.item_exists("build://project/EXPORTS")
-    if _get_root_imports:
-        return _get_root_imports
+    _get_root_exports = ix.item_exists("build://project/EXPORTS")
+    if _get_root_exports:
+        return _get_root_exports
     else:
         return ix.cmds.CreateContext("EXPORTS", "Global", "build://project/")
 
+def get_items_by_type(context, item_type):
+    """
+    TO get all projects items by type
+    @param context: (ofObject | str) clarisse context item or string of path
+    @param item_type: (str) the type name
+    @return: array of items
+    """
+    if isinstance(context, str):
+        context = ix.get_item(context)
+
+    if context.is_object() and context.get_class_name():
+        return [str(context)]
+
+    if context.is_context():
+        flags = ix.api.CoreBitFieldHelper()
+
+        objects = ix.api.OfObjectArray()
+        context.get_all_objects(item_type, objects, flags, False)
+        return objects
+
+    else:
+        if context.get_class_name() == item_type:
+            return [str(context)]
+        else:
+            return []
+
+
+def get_attr(item, attr, attr_prefix=None):
+    """To get attribute value form item"""
+
+    if attr_prefix is None:
+        attr_prefix = 'openpype_'
+
+    attr = attr_prefix + attr
+
+    if isinstance(item, str):
+        item = ix.get_item(item)
+    else:
+        item = ix.get_item(str(item))
+
+    attr_obj = item.get_attribute(attr)
+    if attr_obj:
+        return attr_obj.get_string()
+    return None
+
+
+def set_attrs(item, attrs):
+    """To set a bunch of attributes to item"""
+    for attr_name in attrs:
+        item.attrs.__setattr__(attr_name, attrs[attr_name])
+
+def get_all_attrs(item, attr_prefix=None):
+    """
+    TO get all attrs name: value of given item
+    :param item: (OfObject | str)
+    :param attr_prefix: prefix to remove
+    :return: (dict)
+    """
+
+    if isinstance(item, str):
+        item = ix.get_item(item)
+
+    if attr_prefix is None:
+        attr_prefix = "openpype_"
+
+    attrs = {}
+    for i in range(item.get_attribute_count()):
+        attr = item.get_attribute(i)
+        attr_name = attr.get_name().replace(attr_prefix, '')
+        attrs[attr_name] = attr.get_string()
+
+    return attrs
 
 def check_ctx(ctx):
     """Check if context exists"""
@@ -139,6 +211,30 @@ def create_exports_contexts():
             ctx_list.append(str(ctx))
     return ctx_list
 
+def create_item(context, item_type, name):
+    """Creates item in clarisse """
+
+    node_path = ix.cmds.CreateObject(str(name), item_type, 'Global', str(context))
+    return node_path
+
+def create_context(context):
+    """ creates context and check if exist return it"""
+    _name, _context = context.rsplit('/', 1)
+
+    if not ix.item_exists(_name):
+        create_context(_name)
+    if not ix.item_exists(context):
+        context = ix.cmds.CreateContext(str(_context), 'Global', _name)
+    else:
+        context = ix.get_item(context)
+
+    return str(context)
+def get_current_frame_range():
+    return ix.application.get_current_frame_range()
+
+
+def get_current_frame():
+    return ix.application.get_current_frame()
 
 def get_raw_item_filename(itemobject):
     """Returns a raw string for the object
