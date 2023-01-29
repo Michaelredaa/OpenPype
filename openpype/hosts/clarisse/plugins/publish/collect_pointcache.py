@@ -21,7 +21,7 @@ class CollectPointCacheModelNode(pyblish.api.ContextPlugin):
         """Inject the current geometry output and file"""
 
         task = legacy_io.Session["AVALON_TASK"]
-        geo_collection = get_export_containers(creatortype="geometry")
+        geo_collection = get_export_containers(creatortype="geometry", class_type="AbcExportOptionsUi")
         # create instances
         for geo in geo_collection:
             item = ix.get_item(str(geo))
