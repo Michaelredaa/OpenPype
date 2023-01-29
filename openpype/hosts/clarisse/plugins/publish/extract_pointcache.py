@@ -12,7 +12,7 @@ class ExtractClarissePointCacheModel(publish.Extractor):
     order = pyblish.api.ExtractorOrder
     label = "Extract Clarisse Geometry from Context"
     hosts = ["clarisse"]
-    families = ["model"]
+    families = ["abc"]
 
     def process(self, instance):
 
